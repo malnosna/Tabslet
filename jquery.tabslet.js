@@ -37,7 +37,8 @@
 			active:       1,
 			controls:     {
 				prev: '.prev',
-				next: '.next'
+				next: '.next',
+				cbvideo: '.cbvideo'
 			}
 		};
 
@@ -97,10 +98,17 @@
 
 			// Autorotate
 			var elements = $this.find('> ul li'), i = options.active - 1; // ungly
-
+			
+			// Pause Autorotate
+			var pauseAutorotate = false;
+			
+			var currentTabNumber = 0;
+			
 			function forward() {
 
-				i = ++i % elements.length; // wrap around
+				i = ++currentTabNumber % elements.length; // wrap around
+				
+				currentTabNumber = i;
 
 				options.mouseevent == 'hover' ? elements.eq(i).trigger('mouseover') : elements.eq(i).click();
 
@@ -116,12 +124,22 @@
 
 			if (options.autorotate) {
 
-				setTimeout(forward, 0);
+				setTimeout(forward, options.delay);
 
-				if (options.pauseonhover) $this.on( "mouseleave", function() { setTimeout(forward, 1000); });
-
+				// autorotate only if video control is not clicked
+				if (options.pauseonhover) $this.on( "mouseleave", function() { 
+					if (!pauseAutorotate)
+					{
+						setTimeout(forward, options.delay); 
+					}
+				});
+				
+				// when video lightbox closes and someone clicked/mouseover on the tabs again, the autorotate resumes
+				if (options.pauseonhover) $this.on( "mouseover", function() { 
+					pauseAutorotate = false;
+				});
 			}
-
+			
 			function move(direction) {
 
 				if (direction == 'forward') i = ++i % elements.length; // wrap around
@@ -131,13 +149,35 @@
 				elements.eq(i).click();
 
 			}
-
+			
+			// set the current tab number to the clicked/hovered tab
+			for (var j = 0; j < elements.length; j++)
+			{
+				if (options.mouseevent == 'hover')
+				{
+					elements.eq(j).on( "mouseover", function() {
+						currentTabNumber = elements.index(this);
+					});
+				}
+				else
+				{
+					elements.eq(j).click(function() {
+						currentTabNumber = elements.index(this);
+					});
+				}
+			}
+			
 			$this.find(options.controls.next).click(function() {
 				move('forward');
 			});
 
 			$this.find(options.controls.prev).click(function() {
 				move('backward');
+			});
+			
+			// when video control is clicked, the autorotate pauses
+			$this.find(options.controls.cbvideo).click(function() {
+				pauseAutorotate = true;
 			});
 
 			$this.on ('destroy', function() {
