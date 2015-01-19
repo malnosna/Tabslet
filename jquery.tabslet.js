@@ -1,193 +1,202 @@
 /**
- * Tabs plugin
+ * Tabslet | tabs jQuery plugin
  *
- * @copyright	Copyright 2012, Dimitris Krestos
- * @license		Apache License, Version 2.0 (http://www.opensource.org/licenses/apache2.0.php)
- * @link		http://vdw.staytuned.gr
- * @version		v1.4.2
+ * @copyright Copyright 2012, Dimitris Krestos
+ * @license   Apache License, Version 2.0 (http://www.opensource.org/licenses/apache2.0.php)
+ * @link      http://vdw.staytuned.gr
+ * @version   v1.4.4
  */
 
-	/* Sample html structure
+  /* Sample html structure
 
-	<div class='tabs'>
-		<ul class='horizontal'>
-			<li><a href="#tab-1">Tab 1</a></li>
-			<li><a href="#tab-2">Tab 2</a></li>
-			<li><a href="#tab-3">Tab 3</a></li>
-		</ul>
-		<div id='tab-1'></div>
-		<div id='tab-2'></div>
-		<div id='tab-3'></div>
-	</div>
+  <div class='tabs'>
+    <ul class='horizontal'>
+      <li><a href="#tab-1">Tab 1</a></li>
+      <li><a href="#tab-2">Tab 2</a></li>
+      <li><a href="#tab-3">Tab 3</a></li>
+    </ul>
+    <div id='tab-1'></div>
+    <div id='tab-2'></div>
+    <div id='tab-3'></div>
+  </div>
 
-	*/
+  */
 
 ;(function($, window, undefined) {
-	"use strict";
+  "use strict";
 
-	$.fn.tabslet = function(options) {
+  $.fn.tabslet = function(options) {
 
-		var defaults = {
-			mouseevent:   'click',
-			attribute:    'href',
-			animation:    false,
-			autorotate:   false,
-			pauseonhover: true,
-			delay:        2000,
-			active:       1,
-			controls:     {
-				prev: '.prev',
-				next: '.next',
-				cbvideo: '.cbvideo'
-			}
-		};
+    var defaults = {
+      mouseevent:   'click',
+      attribute:    'href',
+      animation:    false,
+      autorotate:   false,
+      pauseonhover: true,
+      delay:        2000,
+      active:       1,
+      controls:     {
+        prev: '.prev',
+        next: '.next',
+		cbvideo: '.cbvideo'
+      }
+    };
 
-		var options = $.extend(defaults, options);
+    var options = $.extend(defaults, options);
 
-		return this.each(function() {
+    return this.each(function() {
 
-			var $this = $(this);
+      var $this = $(this);
 
-			// Ungly overwrite
-			options.mouseevent    = $this.data('mouseevent') || options.mouseevent;
-			options.attribute     = $this.data('attribute') || options.attribute;
-			options.animation     = $this.data('animation') || options.animation;
-			options.autorotate    = $this.data('autorotate') || options.autorotate;
-			options.pauseonhover 	= $this.data('pauseonhover') || options.pauseonhover;
-			options.delay 				= $this.data('delay') || options.delay;
-			options.active 				= $this.data('active') || options.active;
+      // Autorotate
+      var elements = $this.find('> ul li'), i = options.active - 1; // ungly
 
-			$this.find('> div').hide();
-			$this.find('> div').eq(options.active - 1).show();
-			$this.find('> ul li').eq(options.active - 1).addClass('active');
+      if ( !$this.data( 'tabslet-init' ) ) {
 
-			var fn = eval(
+        $this.data( 'tabslet-init', true );
 
-				function() {
+        // Ungly overwrite
+        options.mouseevent    = $this.data('mouseevent') || options.mouseevent;
+        options.attribute     = $this.data('attribute') || options.attribute;
+        options.animation     = $this.data('animation') || options.animation;
+        options.autorotate    = $this.data('autorotate') || options.autorotate;
+        options.pauseonhover  = $this.data('pauseonhover') || options.pauseonhover;
+        options.delay         = $this.data('delay') || options.delay;
+        options.active        = $this.data('active') || options.active;
 
-					$(this).trigger('_before');
+        $this.find('> div').hide();
+        $this.find('> div').eq(options.active - 1).show();
+        $this.find('> ul li').eq(options.active - 1).addClass('active');
 
-					$this.find('> ul li').removeClass('active');
-					$(this).addClass('active');
-					$this.find('> div').hide();
+        var fn = eval(
 
-					var currentTab = $(this).find('a').attr(options.attribute);
+          function() {
 
-					if (options.animation) {
+            $(this).trigger('_before');
 
-						$this.find(currentTab).animate( { opacity: 'show' }, 'slow', function() {
-							$(this).trigger('_after');
-						});
+            $this.find('> ul li').removeClass('active');
+            $(this).addClass('active');
+            $this.find('> div').hide();
 
-					} else {
+            i = elements.index($(this));
 
-						$this.find(currentTab).show();
-						$(this).trigger('_after');
+            var currentTab = $(this).find('a').attr(options.attribute);
 
-					}
+            if (options.animation) {
 
-					return false;
+              $this.find(currentTab).animate( { opacity: 'show' }, 'slow', function() {
+                $(this).trigger('_after');
+              });
 
+            } else {
+
+              $this.find(currentTab).show();
+              $(this).trigger('_after');
+
+            }
+
+            return false;
+
+          }
+
+        );
+
+        var init = eval("$this.find('> ul li')." + options.mouseevent + "(fn)");
+
+        init;
+		
+		// Pause Autorotate
+		var pauseAutorotate = false;
+		
+		var currentTabNumber = 0;
+
+        var forward = function() {
+
+          i = ++i % elements.length; // wrap around
+		  
+		  currentTabNumber = i;
+
+          options.mouseevent == 'hover' ? elements.eq(i).trigger('mouseover') : elements.eq(i).click();
+
+          var t = setTimeout(forward, options.delay);
+
+          $this.mouseover(function () {
+
+            if (options.pauseonhover) clearTimeout(t);
+
+          });
+
+        }
+
+        if (options.autorotate) {
+
+			setTimeout(forward, options.delay);
+
+			// autorotate only if video control is not clicked
+			if (options.pauseonhover) $this.on( "mouseleave", function() { 
+				if (!pauseAutorotate)
+				{
+					setTimeout(forward, 1000); 
 				}
-
-			);
-
-			var init = eval("$this.find('> ul li')." + options.mouseevent + "(fn)");
-
-			init;
-
-			// Autorotate
-			var elements = $this.find('> ul li'), i = options.active - 1; // ungly
+			});
 			
-			// Pause Autorotate
-			var pauseAutorotate = false;
-			
-			var currentTabNumber = 0;
-			
-			function forward() {
+			// when video lightbox closes and someone clicked/mouseover on the tabs again, the autorotate resumes
+			if (options.pauseonhover) $this.on( "mouseover", function() { 
+				pauseAutorotate = false;
+			});
 
-				i = ++currentTabNumber % elements.length; // wrap around
-				
-				currentTabNumber = i;
+        }
 
-				options.mouseevent == 'hover' ? elements.eq(i).trigger('mouseover') : elements.eq(i).click();
+        var move = function(direction) {
 
-				var t = setTimeout(forward, options.delay);
+          if (direction == 'forward') i = ++i % elements.length; // wrap around
 
-				$this.mouseover(function () {
+          if (direction == 'backward') i = --i % elements.length; // wrap around
 
-					if (options.pauseonhover) clearTimeout(t);
+          elements.eq(i).click();
 
-				});
-
-			}
-
-			if (options.autorotate) {
-
-				setTimeout(forward, options.delay);
-
-				// autorotate only if video control is not clicked
-				if (options.pauseonhover) $this.on( "mouseleave", function() { 
-					if (!pauseAutorotate)
-					{
-						setTimeout(forward, options.delay); 
-					}
-				});
-				
-				// when video lightbox closes and someone clicked/mouseover on the tabs again, the autorotate resumes
-				if (options.pauseonhover) $this.on( "mouseover", function() { 
-					pauseAutorotate = false;
-				});
-			}
-			
-			function move(direction) {
-
-				if (direction == 'forward') i = ++i % elements.length; // wrap around
-
-				if (direction == 'backward') i = --i % elements.length; // wrap around
-
-				elements.eq(i).click();
-
-			}
-			
-			// set the current tab number to the clicked/hovered tab
-			for (var j = 0; j < elements.length; j++)
+        }
+		
+		// set the current tab number to the clicked/hovered tab
+		for (var j = 0; j < elements.length; j++)
+		{
+			if (options.mouseevent == 'hover')
 			{
-				if (options.mouseevent == 'hover')
-				{
-					elements.eq(j).on( "mouseover", function() {
-						currentTabNumber = elements.index(this);
-					});
-				}
-				else
-				{
-					elements.eq(j).click(function() {
-						currentTabNumber = elements.index(this);
-					});
-				}
+				elements.eq(j).on( "mouseover", function() {
+					currentTabNumber = elements.index(this);
+				});
 			}
-			
-			$this.find(options.controls.next).click(function() {
-				move('forward');
-			});
+			else
+			{
+				elements.eq(j).click(function() {
+					currentTabNumber = elements.index(this);
+				});
+			}
+		}
 
-			$this.find(options.controls.prev).click(function() {
-				move('backward');
-			});
-			
-			// when video control is clicked, the autorotate pauses
-			$this.find(options.controls.cbvideo).click(function() {
-				pauseAutorotate = true;
-			});
+        $this.find(options.controls.next).click(function() {
+          move('forward');
+        });
 
-			$this.on ('destroy', function() {
-				$(this).removeData();
-			});
-
+        $this.find(options.controls.prev).click(function() {
+          move('backward');
+        });
+		
+		// when video control is clicked, the autorotate pauses
+		$this.find(options.controls.cbvideo).click(function() {
+			pauseAutorotate = true;
 		});
 
-	};
+        $this.on ('destroy', function() {
+          $(this).removeData();
+        });
 
-	$(document).ready(function () { $('[data-toggle="tabslet"]').tabslet(); });
+      }
+
+    });
+
+  };
+
+  $(document).ready(function () { $('[data-toggle="tabslet"]').tabslet(); });
 
 })(jQuery);
