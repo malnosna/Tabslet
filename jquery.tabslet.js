@@ -7,6 +7,10 @@
  * @version   v1.4.4
  */
 
+ /**
+ * 2015/01/20 malnosna adapted: Allows pausing the autorotate tab when a lightbox is opened from a tab
+ */
+ 
   /* Sample html structure
 
   <div class='tabs'>
@@ -38,7 +42,7 @@
       controls:     {
         prev: '.prev',
         next: '.next',
-		cbvideo: '.cbvideo'
+        lightbox: '.lightbox'
       }
     };
 
@@ -108,7 +112,7 @@
 		// Pause Autorotate
 		var pauseAutorotate = false;
 		
-		var currentTabNumber = 0;
+		var currentTabNumber = options.active - 1;
 
         var forward = function() {
 
@@ -130,13 +134,13 @@
 
         if (options.autorotate) {
 
-			setTimeout(forward, options.delay);
+			setTimeout(forward, options.delay); // options.delay is the delay time to the next tab
 
 			// autorotate only if video control is not clicked
 			if (options.pauseonhover) $this.on( "mouseleave", function() { 
 				if (!pauseAutorotate)
 				{
-					setTimeout(forward, 1000); 
+					setTimeout(forward, 1000); // 1000 is the time to the next tab AFTER pauseonhover
 				}
 			});
 			
@@ -183,7 +187,7 @@
         });
 		
 		// when video control is clicked, the autorotate pauses
-		$this.find(options.controls.cbvideo).click(function() {
+		$this.find(options.controls.lightbox).click(function() {
 			pauseAutorotate = true;
 		});
 
