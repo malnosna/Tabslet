@@ -4,11 +4,12 @@
  * @copyright Copyright 2012, Dimitris Krestos
  * @license   Apache License, Version 2.0 (http://www.opensource.org/licenses/apache2.0.php)
  * @link      http://vdw.staytuned.gr
- * @version   v1.4.4
+ * @version   v1.4.7
  */
 
  /**
  * 2015/01/20 malnosna adapted: Allows pausing the autorotate tab when a lightbox is opened from a tab
+ * 2015/03/02 malnosna adapted: Integrates timer fix from vdw
  */
  
   /* Sample html structure
@@ -109,6 +110,8 @@
 
         init;
 		
+		var t;
+		
 		// Pause Autorotate
 		var pauseAutorotate = false;
 		
@@ -122,25 +125,43 @@
 
           options.mouseevent == 'hover' ? elements.eq(i).trigger('mouseover') : elements.eq(i).click();
 
-          var t = setTimeout(forward, options.delay);
+          if (options.autorotate) {
 
-          $this.mouseover(function () {
+            clearTimeout(t);
 
-            if (options.pauseonhover) clearTimeout(t);
+            t = setTimeout(forward, options.delay);
 
-          });
+            $this.mouseover(function () {
+
+              if (options.pauseonhover) clearTimeout(t);
+
+            });
+
+          }
 
         }
 
         if (options.autorotate) {
 
-			setTimeout(forward, options.delay); // options.delay is the delay time to the next tab
+		  t = setTimeout(forward, options.delay); // options.delay is the delay time to the next tab
+
+		  $this.hover(function() {
+
+			if (options.pauseonhover) clearTimeout(t);
+
+		  }, function() {
+			if (!pauseAutorotate)
+			{
+				t = setTimeout(forward, options.delay);
+			}
+		  });
 
 			// autorotate only if video control is not clicked
 			if (options.pauseonhover) $this.on( "mouseleave", function() { 
 				if (!pauseAutorotate)
 				{
-					setTimeout(forward, 1000); // 1000 is the time to the next tab AFTER pauseonhover
+					clearTimeout(t);
+					t = setTimeout(forward, options.delay); // options.delay is the time to the next tab AFTER pauseonhover - can set it to something else
 				}
 			});
 			
